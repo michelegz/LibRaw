@@ -205,6 +205,7 @@ int LibRaw::copy_mem_image(void *scan0, int stride, int bgr)
     SWAP(S.height, S.width);
   uchar *ppm;
   ushort *ppm2;
+  float *ppmf;
   int c, row, col, soff, rstep, cstep;
 
   soff = flip_index(0, 0);
@@ -215,6 +216,7 @@ int LibRaw::copy_mem_image(void *scan0, int stride, int bgr)
   {
     uchar *bufp = ((uchar *)scan0) + row * stride;
     ppm2 = (ushort *)(ppm = bufp);
+    ppmf = (float *)bufp;
     // keep trivial decisions in the outer loop for speed
     if (bgr)
     {
@@ -222,6 +224,12 @@ int LibRaw::copy_mem_image(void *scan0, int stride, int bgr)
       {
         for (col = 0; col < S.width; col++, soff += cstep)
           FORBGR *ppm++ = imgdata.color.curve[imgdata.image[soff][c]] >> 8;
+      }
+      else if (O.output_bps == 32)
+      {
+        for (col = 0; col < S.width; col++, soff += cstep)
+          FORBGR *ppmf++ = imgdata.image[soff][c] / O.bright /
+                           65535.0f; // float always linear
       }
       else
       {
@@ -235,6 +243,12 @@ int LibRaw::copy_mem_image(void *scan0, int stride, int bgr)
       {
         for (col = 0; col < S.width; col++, soff += cstep)
           FORRGB *ppm++ = imgdata.color.curve[imgdata.image[soff][c]] >> 8;
+      }
+      else if (O.output_bps == 32)
+      {
+        for (col = 0; col < S.width; col++, soff += cstep)
+          FORRGB *ppmf++ = imgdata.image[soff][c] / O.bright /
+                           65535.0f; // float always linear
       }
       else
       {
